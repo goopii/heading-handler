@@ -1,10 +1,10 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin } from "obsidian";
-import { increaseHeading, decreaseHeading } from "@/heading";
+import { Line } from "@Line";
 import {
 	MyPluginSettings,
 	DEFAULT_SETTINGS,
 	SampleSettingTab,
-} from "@/settings";
+} from "@settings";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -16,7 +16,9 @@ export default class MyPlugin extends Plugin {
 			id: "increase-heading-at-current-line",
 			name: "Increase Heading at Current Line",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				increaseHeading(editor);
+				const lineRow = editor.getCursor().line;
+				const l = new Line(editor, lineRow);
+				l.increaseHeading(editor);
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "w" }],
 		});
@@ -24,9 +26,31 @@ export default class MyPlugin extends Plugin {
 			id: "decrease-heading-at-current-line",
 			name: "Decrease Heading at Current Line",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				decreaseHeading(editor);
+				const lineRow = editor.getCursor().line;
+				const l = new Line(editor, lineRow);
+				l.decreaseHeading(editor);
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "s" }],
+		});
+		this.addCommand({
+			id: "convert-indent-to-heading",
+			name: "Convert indentation to heading level",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				const lineRow = editor.getCursor().line;
+				const l = new Line(editor, lineRow);
+				l.convertIndentToHeading(editor);
+			},
+			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "w" }],
+		});
+		this.addCommand({
+			id: "set-heading-indent",
+			name: "Set heading level to identation level",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				const lineRow = editor.getCursor().line;
+				const l = new Line(editor, lineRow);
+				l.setHeadingToIdent(editor);
+			},
+			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "q" }],
 		});
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
