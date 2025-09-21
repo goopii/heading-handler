@@ -10,10 +10,10 @@ export class Line {
 
 	row: number;
 
+	indent: number;
 	prefix: string;
 	heading: number;
 	text: string;
-	indent: number;
 
 	constructor(editor: Editor, lineRow: number) {
 		this.row = lineRow;
@@ -97,13 +97,19 @@ export class Line {
 
 		this.update(editor, newContent);
 	}
-	public setHeadingToIdent(editor: Editor): void {
+	public setHeadingToIndent(editor: Editor): void {
 		const newContent =
 			this.INDENT_CHAR.repeat(this.indent) +
 			this.prefix +
 			this.HEADING_CHAR.repeat(this.indent + 1) +
 			" " +
 			this.text;
+
+		this.update(editor, newContent);
+	}
+	public removeHeading(editor: Editor): void {
+		const newContent =
+			this.INDENT_CHAR.repeat(this.indent) + this.prefix + this.text;
 
 		this.update(editor, newContent);
 	}

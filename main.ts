@@ -40,17 +40,27 @@ export default class MyPlugin extends Plugin {
 				const l = new Line(editor, lineRow);
 				l.convertIndentToHeading(editor);
 			},
-			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "w" }],
+			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "q" }],
 		});
 		this.addCommand({
 			id: "set-heading-indent",
-			name: "Set heading level to identation level",
+			name: "Set heading level to indentation level",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const lineRow = editor.getCursor().line;
 				const l = new Line(editor, lineRow);
-				l.setHeadingToIdent(editor);
+				l.setHeadingToIndent(editor);
 			},
-			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "q" }],
+			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "w" }],
+		});
+		this.addCommand({
+			id: "remove heading",
+			name: "Remove heading",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				const lineRow = editor.getCursor().line;
+				const l = new Line(editor, lineRow);
+				l.removeHeading(editor);
+			},
+			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "s" }],
 		});
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
