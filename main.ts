@@ -26,7 +26,8 @@ export default class MyPlugin extends Plugin {
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const lineRow = editor.getCursor().line;
 				const l = new Line(editor, lineRow);
-				l.increaseHeading(editor);
+				l.increaseHeading();
+				Line.applyUpdates();
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "w" }],
 		});
@@ -36,7 +37,8 @@ export default class MyPlugin extends Plugin {
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const lineRow = editor.getCursor().line;
 				const l = new Line(editor, lineRow);
-				l.decreaseHeading(editor);
+				l.decreaseHeading();
+				Line.applyUpdates();
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "s" }],
 		});
@@ -46,7 +48,8 @@ export default class MyPlugin extends Plugin {
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const lineRow = editor.getCursor().line;
 				const l = new Line(editor, lineRow);
-				l.convertIndentToHeading(editor);
+				l.convertIndentToHeading();
+				Line.applyUpdates();
 			},
 			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "q" }],
 		});
@@ -56,7 +59,8 @@ export default class MyPlugin extends Plugin {
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const lineRow = editor.getCursor().line;
 				const l = new Line(editor, lineRow);
-				l.setHeadingToIndent(editor);
+				l.setHeadingToIndent();
+				Line.applyUpdates();
 			},
 			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "w" }],
 		});
@@ -66,7 +70,8 @@ export default class MyPlugin extends Plugin {
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const lineRow = editor.getCursor().line;
 				const l = new Line(editor, lineRow);
-				l.removeHeading(editor);
+				l.removeHeading();
+				Line.applyUpdates();
 			},
 			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "s" }],
 		});
@@ -74,17 +79,12 @@ export default class MyPlugin extends Plugin {
 			id: "debug-helper",
 			name: "Helper command for debugging",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				if (editor.somethingSelected()) {
-					const selections: EditorSelection[] =
-						editor.listSelections();
-
-					selections.forEach((s) => {
-						for (let i = s.head.line; i < s.anchor.line; i++) {}
-					});
-
-					const selectionText = editor.getSelection();
-					console.log(selectionText);
-				}
+				Line.iterateOverSelectedLines(editor, (l: Line) => {
+					if (l.heading >= 1) {
+						l.increaseHeading();
+					}
+				});
+				Line.applyUpdates();
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "x" }],
 		});

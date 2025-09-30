@@ -1,4 +1,4 @@
-import { Editor } from "obsidian";
+import { Editor, EditorChange, EditorSelection } from "obsidian";
 
 const REGEX_LIST = /^(\s*)(?:-\s+\[[ xX]\]|[-*+](?!\s*\[)|\d+\.)(?:\s|$)/;
 const REGEX_BULLET = /^(?:\s*)-(?!\s*\[)/;
@@ -8,7 +8,11 @@ export class Line {
 	INDENT_CHAR = "\t";
 	HEADING_CHAR = "#";
 
+	private static editor: Editor | undefined;
+	private static updateQueue: Map<Line, string> = new Map();
+
 	row: number;
+	contentLength: number;
 
 	indent: number;
 	prefix: string;
@@ -16,8 +20,13 @@ export class Line {
 	text: string;
 
 	constructor(editor: Editor, lineRow: number) {
+		if (Line.editor !== editor) {
+			Line.editor = editor;
+			Line.updateQueue.clear();
+		}
 		this.row = lineRow;
 		const lineContent = editor.getLine(lineRow);
+		this.contentLength = lineContent.length;
 
 		const match = lineContent.match(REGEX_LIST);
 		const prefix = match ? match[0].slice(match[1].length) : ""; // Remove indentation from prefix
@@ -45,21 +54,77 @@ export class Line {
 		this.text = text;
 	}
 
-	public update(
+	public static iterateOverSelectedLines(
 		editor: Editor,
-		newContent: string,
-		moveCursorToEnd: boolean = true
-	) {
-		editor.setLine(this.row, newContent);
-		if (moveCursorToEnd) {
-			editor.setCursor({
-				ch: newContent.length,
-				line: this.row,
-			});
-		}
+		callbackfn: (line: Line) => void
+	): void {
+		if (!editor.somethingSelected()) return;
+		const selections: EditorSelection[] = editor.listSelections();
+
+		selections.forEach((s) => {
+			for (
+				let lineRow = Math.min(s.head.line, s.anchor.line);
+				lineRow < Math.max(s.head.line, s.anchor.line) + 1;
+				lineRow++
+			) {
+				callbackfn(new Line(editor, lineRow));
+			}
+		});
 	}
 
-	public decreaseHeading(editor: Editor): void {
+	public static applyUpdates(): void {
+		const ed = Line.editor;
+		if (!ed) return;
+		if (Line.updateQueue.size === 0) return;
+
+		const updatedLines: EditorChange[] = [];
+
+		Line.updateQueue.forEach(
+			(newContent: string, l: Line, map: Map<Line, string>) => {
+				const change: EditorChange = {
+					from: { ch: 0, line: l.row },
+					text: newContent,
+					to: { ch: l.contentLength, line: l.row },
+				};
+				updatedLines.push(change);
+				if (Line.updateQueue.size === 1) {
+					if (l.contentLength > newContent.length) {
+						ed.setCursor({
+							ch: newContent.length + 1,
+							line: l.row,
+						});
+					} else {
+						ed.setCursor({
+							ch: newContent.length - 1,
+							line: l.row,
+						});
+					}
+				}
+			}
+		);
+		ed.transaction({
+			changes: updatedLines,
+		});
+
+		Line.updateQueue.clear();
+	}
+
+	public stageUpdate(newContent: string) {
+		const ed = Line.editor;
+		if (!ed) return;
+		Line.updateQueue.set(this, newContent);
+		return;
+		// if (defer) {
+		// }
+
+		// ed.setLine(this.row, newContent);
+		// ed.setCursor({
+		// 	ch: newContent.length,
+		// 	line: this.row,
+		// });
+	}
+
+	public decreaseHeading(): void {
 		if (this.heading <= 0) return;
 		let newContent = "";
 		if (this.heading >= 2) {
@@ -76,9 +141,9 @@ export class Line {
 				this.HEADING_CHAR.repeat(this.heading - 1) +
 				this.text;
 		}
-		this.update(editor, newContent);
+		this.stageUpdate(newContent);
 	}
-	public increaseHeading(editor: Editor): void {
+	public increaseHeading(): void {
 		if (this.heading >= 6) return;
 		if (REGEX_BULLET.test(this.prefix) || this.prefix === "") {
 			const newContent =
@@ -88,16 +153,16 @@ export class Line {
 				" " +
 				this.text;
 
-			this.update(editor, newContent);
+			this.stageUpdate(newContent);
 		}
 	}
-	public convertIndentToHeading(editor: Editor): void {
+	public convertIndentToHeading(defer: boolean = false): void {
 		const newContent =
 			this.HEADING_CHAR.repeat(this.indent + 1) + " " + this.text;
 
-		this.update(editor, newContent);
+		this.stageUpdate(newContent);
 	}
-	public setHeadingToIndent(editor: Editor): void {
+	public setHeadingToIndent(defer: boolean = false): void {
 		const newContent =
 			this.INDENT_CHAR.repeat(this.indent) +
 			this.prefix +
@@ -105,12 +170,12 @@ export class Line {
 			" " +
 			this.text;
 
-		this.update(editor, newContent);
+		this.stageUpdate(newContent);
 	}
-	public removeHeading(editor: Editor): void {
+	public removeHeading(defer: boolean = false): void {
 		const newContent =
 			this.INDENT_CHAR.repeat(this.indent) + this.prefix + this.text;
 
-		this.update(editor, newContent);
+		this.stageUpdate(newContent);
 	}
 }
