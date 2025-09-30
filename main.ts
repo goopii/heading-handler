@@ -1,4 +1,12 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin } from "obsidian";
+import {
+	App,
+	Editor,
+	EditorSelection,
+	MarkdownView,
+	Modal,
+	Notice,
+	Plugin,
+} from "obsidian";
 import { Line } from "@Line";
 import {
 	MyPluginSettings,
@@ -53,7 +61,7 @@ export default class MyPlugin extends Plugin {
 			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "w" }],
 		});
 		this.addCommand({
-			id: "remove heading",
+			id: "remove-heading",
 			name: "Remove heading",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const lineRow = editor.getCursor().line;
@@ -61,6 +69,24 @@ export default class MyPlugin extends Plugin {
 				l.removeHeading(editor);
 			},
 			hotkeys: [{ modifiers: ["Alt", "Shift"], key: "s" }],
+		});
+		this.addCommand({
+			id: "debug-helper",
+			name: "Helper command for debugging",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				if (editor.somethingSelected()) {
+					const selections: EditorSelection[] =
+						editor.listSelections();
+
+					selections.forEach((s) => {
+						for (let i = s.head.line; i < s.anchor.line; i++) {}
+					});
+
+					const selectionText = editor.getSelection();
+					console.log(selectionText);
+				}
+			},
+			hotkeys: [{ modifiers: ["Alt"], key: "x" }],
 		});
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
