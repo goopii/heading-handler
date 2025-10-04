@@ -24,6 +24,9 @@ export default class MyPlugin extends Plugin {
 			name: "Command for testing purposes during development",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				console.log("---debug-command---");
+				Line.iterateOverSelectedLines(editor, (l: Line) => {
+					console.log(l);
+				});
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "x" }],
 		});
@@ -31,18 +34,26 @@ export default class MyPlugin extends Plugin {
 			id: "increase-heading-smart",
 			name: "Increase Heading Smartly",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				Line.iterateOverSelectedLines(editor, (l: Line) => {
-					if (!editor.somethingSelected()) {
-						if (l.parentHeading) {
-							l.setHeading(l.parentHeading);
-						} else {
-							l.setHeading(l.heading + 1);
-						}
-					} else if (l.heading && l.parentHeading < l.heading) {
+				if (!editor.somethingSelected()) {
+					// SINGLE LINE
+					const l = Line.atCursor(editor);
+					l.setParentLine(editor);
+					// If line has no heading, set heading to parent
+					if (!l.heading && l.parent) {
+						l.setHeading(l.parent.heading);
+					} else {
 						l.increaseHeading();
 					}
-				});
-				Line.applyUpdates();
+				} else {
+					// MULTIPLE LINES
+					Line.iterateOverSelectedLines(editor, (l: Line) => {
+						// if line is heading, increase it
+						if (l.heading) {
+							l.increaseHeading();
+						}
+					});
+				}
+				Line.applyUpdates(editor);
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "w" }],
 		});
@@ -50,14 +61,24 @@ export default class MyPlugin extends Plugin {
 			id: "decrease-heading-smart",
 			name: "Decrease Heading Smartly",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				Line.iterateOverSelectedLines(editor, (l: Line) => {
-					console.log("parent: ", l.parentHeading);
-					console.log("line: ", l.heading);
-					if (l.parentHeading < l.heading || l.parentHeading === 1) {
-						l.decreaseHeading();
-					}
-				});
-				Line.applyUpdates();
+				if (!editor.somethingSelected()) {
+					// SINGLE LINE
+					const l = Line.atCursor(editor);
+					l.decreaseHeading();
+				} else {
+					// MULTIPLE LINES
+					Line.iterateOverSelectedLines(editor, (l: Line) => {
+						// console.log(`iterating over '${l.text}':`);
+						l.setParentLine(editor);
+						if (l.heading && l.parent) {
+							l.setHeading(
+								Math.max(l.heading - 1, l.parent.heading)
+							);
+						}
+						// console.log("----------------------");
+					});
+				}
+				Line.applyUpdates(editor);
 			},
 			hotkeys: [{ modifiers: ["Alt"], key: "s" }],
 		});
@@ -65,45 +86,45 @@ export default class MyPlugin extends Plugin {
 			id: "increase-heading-at-current-line",
 			name: "Increase Heading at Current Line",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const l = Line.newFromCursor(editor);
+				const l = Line.atCursor(editor);
 				l.increaseHeading();
-				Line.applyUpdates();
+				Line.applyUpdates(editor);
 			},
 		});
 		this.addCommand({
 			id: "decrease-heading-at-current-line",
 			name: "Decrease Heading at Current Line",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const l = Line.newFromCursor(editor);
+				const l = Line.atCursor(editor);
 				l.decreaseHeading();
-				Line.applyUpdates();
+				Line.applyUpdates(editor);
 			},
 		});
 		this.addCommand({
 			id: "convert-indent-to-heading",
 			name: "Convert indentation to heading level",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const l = Line.newFromCursor(editor);
+				const l = Line.atCursor(editor);
 				l.convertIndentToHeading();
-				Line.applyUpdates();
+				Line.applyUpdates(editor);
 			},
 		});
 		this.addCommand({
 			id: "set-heading-indent",
 			name: "Set heading level to indentation level",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const l = Line.newFromCursor(editor);
+				const l = Line.atCursor(editor);
 				l.setHeadingToIndent();
-				Line.applyUpdates();
+				Line.applyUpdates(editor);
 			},
 		});
 		this.addCommand({
 			id: "remove-heading",
 			name: "Remove heading",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				const l = Line.newFromCursor(editor);
+				const l = Line.atCursor(editor);
 				l.removeHeading();
-				Line.applyUpdates();
+				Line.applyUpdates(editor);
 			},
 		});
 		// This adds a settings tab so the user can configure various aspects of the plugin
