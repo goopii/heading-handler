@@ -38,16 +38,16 @@ export default class MyPlugin extends Plugin {
 					// SINGLE LINE
 					const l = Line.atCursor(editor);
 					l.setParentLine(editor);
-					// If line has no heading, set heading to parent
+					// If line has no heading, set heading to parent, adding another heading for each indent below parent
 					if (!l.heading && l.parent) {
-						l.setHeading(l.parent.heading);
+						const indentCompensation = l.indent - l.parent.indent;
+						l.setHeading(l.parent.heading + indentCompensation);
 					} else {
 						l.increaseHeading();
 					}
 				} else {
 					// MULTIPLE LINES
 					Line.iterateOverSelectedLines(editor, (l: Line) => {
-						// if line is heading, increase it
 						if (l.heading) {
 							l.increaseHeading();
 						}
@@ -64,15 +64,27 @@ export default class MyPlugin extends Plugin {
 				if (!editor.somethingSelected()) {
 					// SINGLE LINE
 					const l = Line.atCursor(editor);
-					l.decreaseHeading();
+					if (!l.heading) return;
+					l.setParentLine(editor);
+					if (l.parent) {
+						if (l.heading - 1 < l.parent.heading) {
+							l.setHeading(0);
+						}
+						l.setHeading(l.heading - 1);
+					}
 				} else {
 					// MULTIPLE LINES
 					Line.iterateOverSelectedLines(editor, (l: Line) => {
 						// console.log(`iterating over '${l.text}':`);
 						l.setParentLine(editor);
 						if (l.heading && l.parent) {
+							const indentCompensation =
+								l.indent - l.parent.indent;
 							l.setHeading(
-								Math.max(l.heading - 1, l.parent.heading)
+								Math.max(
+									l.heading - 1,
+									l.parent.heading + indentCompensation
+								)
 							);
 						}
 						// console.log("----------------------");

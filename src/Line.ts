@@ -45,25 +45,34 @@ export class Line {
 	text: string;
 
 	public static atRow(editor: Editor, lineRow: number): Line {
-		let l: Line | undefined = undefined;
+		const l = new Line();
+		Line.currentLines.add(l);
+		l.row = lineRow;
 
-		Line.currentLines.forEach((line: Line) => {
-			if (line.row === lineRow) {
-				l = line;
-				return;
-			}
-		});
-		if (l) return l;
-		else {
-			l = new Line();
-			Line.currentLines.add(l);
-			l.row = lineRow;
+		const lineContent = editor.getLine(lineRow);
+		const parsed = parseLine(lineContent);
+		l.updateInfo(parsed);
+		return l;
 
-			const lineContent = editor.getLine(lineRow);
-			const parsed = parseLine(lineContent);
-			l.updateInfo(parsed);
-			return l;
-		}
+		// let l: Line | undefined = undefined;
+
+		// Line.currentLines.forEach((line: Line) => {
+		// 	if (line.row === lineRow) {
+		// 		l = line;
+		// 		return;
+		// 	}
+		// });
+		// if (l) return l;
+		// else {
+		// 	l = new Line();
+		// 	Line.currentLines.add(l);
+		// 	l.row = lineRow;
+
+		// 	const lineContent = editor.getLine(lineRow);
+		// 	const parsed = parseLine(lineContent);
+		// 	l.updateInfo(parsed);
+		// 	return l;
+		// }
 	}
 
 	public static atCursor(editor: Editor): Line {
@@ -127,25 +136,15 @@ export class Line {
 	}
 
 	public setParentLine(editor: Editor): void {
-		// If current line has a heading, look for the nearest heading above
-		// with heading <= current heading and indent <= current indent.
-		// If current line has no heading, accept any heading above with
-		// indent <= current indent.
-		const currIndent = this.indent;
-		const currHeading = this.heading;
-
 		for (let i = this.row - 1; i >= 0; i--) {
 			const content = editor.getLine(i);
-			if (!content) continue; // skip blank lines
-
+			if (!content) continue;
 			const pl = parseLine(content);
-			if (pl.heading <= 0) continue; // only consider actual headings
+			if (pl.heading <= 0) continue;
 
-			if (pl.indent <= currIndent) {
-				if (currHeading === 0 || pl.heading <= currHeading) {
+			if (pl.indent <= this.indent && pl.prefix === this.prefix) {
+				if (this.heading === 0 || pl.heading <= this.heading) {
 					const l = Line.atRow(editor, i);
-					// console.log(`parent for ${this.text}: ${l.text}:`);
-					// console.log(l);
 					this.parent = l;
 					return;
 				}
@@ -155,6 +154,11 @@ export class Line {
 
 	public setHeading(heading: number): void {
 		if (this.prefix === "" || this.prefix === "-") {
+			// Clamp heading to 1-6
+			heading = Math.max(
+				Math.min(heading, Math.max(0, 6)),
+				Math.min(0, 6)
+			);
 			let newContent: string = "";
 			newContent += Line.INDENT_CHAR.repeat(this.indent);
 			newContent += this.prefix;
