@@ -1,22 +1,22 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 
-export interface MyPluginSettings {
+export interface HeadingHandlerSettings {
 	mySetting: string;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
+export const DEFAULT_SETTINGS: HeadingHandlerSettings = {
 	mySetting: "default",
 };
 
-interface MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+interface HeadingHandler extends Plugin {
+	settings: HeadingHandlerSettings;
 	saveSettings(): Promise<void>;
 }
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class HeadingHandlerSettingTab extends PluginSettingTab {
+	plugin: HeadingHandler;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: HeadingHandler) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

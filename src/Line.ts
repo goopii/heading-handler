@@ -33,8 +33,6 @@ export class Line {
 
 	private static updateQueue: Map<Line, string> = new Map();
 
-	private static currentLines: Set<Line> = new Set<Line>();
-
 	parent: Line | undefined;
 	row: number;
 
@@ -46,33 +44,12 @@ export class Line {
 
 	public static atRow(editor: Editor, lineRow: number): Line {
 		const l = new Line();
-		Line.currentLines.add(l);
 		l.row = lineRow;
 
 		const lineContent = editor.getLine(lineRow);
 		const parsed = parseLine(lineContent);
 		l.updateInfo(parsed);
 		return l;
-
-		// let l: Line | undefined = undefined;
-
-		// Line.currentLines.forEach((line: Line) => {
-		// 	if (line.row === lineRow) {
-		// 		l = line;
-		// 		return;
-		// 	}
-		// });
-		// if (l) return l;
-		// else {
-		// 	l = new Line();
-		// 	Line.currentLines.add(l);
-		// 	l.row = lineRow;
-
-		// 	const lineContent = editor.getLine(lineRow);
-		// 	const parsed = parseLine(lineContent);
-		// 	l.updateInfo(parsed);
-		// 	return l;
-		// }
 	}
 
 	public static atCursor(editor: Editor): Line {
@@ -117,7 +94,6 @@ export class Line {
 		});
 
 		Line.updateQueue.clear();
-		Line.currentLines.clear();
 	}
 
 	public stageUpdate(newContent: string) {
@@ -202,6 +178,7 @@ export class Line {
 		const newContent =
 			Line.INDENT_CHAR.repeat(this.indent) +
 			this.prefix +
+			" " +
 			Line.HEADING_CHAR.repeat(this.indent + 1) +
 			" " +
 			this.text;

@@ -3,7 +3,7 @@
 	"name": "Heading Handler",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Adds commands and functionality for using headings.",
+	"description": "Adds smart context-aware commands for changing the heading.",
 	"author": "goopi",
 	"authorUrl": "https://github.com/goopii",
 	"fundingUrl": "",
