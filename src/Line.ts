@@ -33,6 +33,8 @@ export class Line {
 
 	private static updateQueue: Map<Line, string> = new Map();
 
+	private static virtualLines: Array<Line> = [];
+
 	parent: Line | undefined;
 	row: number;
 
@@ -42,14 +44,19 @@ export class Line {
 	heading: number;
 	text: string;
 
-	public static atRow(editor: Editor, lineRow: number): Line {
-		const l = new Line();
-		l.row = lineRow;
-
-		const lineContent = editor.getLine(lineRow);
+	private constructor(editor: Editor, row: number) {
+		this.row = row;
+		const lineContent = editor.getLine(row);
 		const parsed = parseLine(lineContent);
-		l.updateInfo(parsed);
-		return l;
+		this.updateInfo(parsed);
+		Line.virtualLines[row] = this;
+	}
+
+	public static atRow(editor: Editor, lineRow: number): Line {
+		if (Line.virtualLines[lineRow]) {
+			return Line.virtualLines[lineRow];
+		}
+		return new Line(editor, lineRow);
 	}
 
 	public static atCursor(editor: Editor): Line {
@@ -94,6 +101,7 @@ export class Line {
 		});
 
 		Line.updateQueue.clear();
+		Line.virtualLines = [];
 	}
 
 	public stageUpdate(newContent: string) {
