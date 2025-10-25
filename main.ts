@@ -1,17 +1,5 @@
-import {
-	App,
-	Editor,
-	EditorSelection,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-} from "obsidian";
-import {
-	HeadingHandlerSettings,
-	DEFAULT_SETTINGS,
-	HeadingHandlerSettingTab,
-} from "@settings";
+import { App, Editor, EditorSelection, MarkdownView, Modal, Notice, Plugin } from "obsidian";
+import { HeadingHandlerSettings, DEFAULT_SETTINGS, HeadingHandlerSettingTab } from "@settings";
 import { Line } from "@Line";
 
 export default class HeadingHandler extends Plugin {
@@ -36,19 +24,11 @@ export default class HeadingHandler extends Plugin {
 				if (!editor.somethingSelected()) {
 					// SINGLE LINE
 					const l = Line.atCursor(editor);
-					l.setParentLine(editor);
-					if (!l.heading && l.parent) {
-						const indentCompensation = l.indent - l.parent.indent;
-						l.setHeading(l.parent.heading + indentCompensation);
-					} else {
-						l.increaseHeading();
-					}
+					l.promoteHeading();
 				} else {
 					// MULTIPLE LINES
 					Line.iterateOverSelectedLines(editor, (l: Line) => {
-						if (l.heading) {
-							l.increaseHeading();
-						}
+						l.promoteHeading();
 					});
 				}
 				Line.applyUpdates(editor);
@@ -62,27 +42,19 @@ export default class HeadingHandler extends Plugin {
 				if (!editor.somethingSelected()) {
 					// SINGLE LINE
 					const l = Line.atCursor(editor);
+					console.log(l);
 					if (!l.heading) return;
-					l.setParentLine(editor);
-					if (l.parent) {
-						if (l.heading - 1 < l.parent.heading) {
-							l.setHeading(0);
-						}
-						l.setHeading(l.heading - 1);
+
+					if (l.heading - 1 < l.getMinimumHeading()) {
+						l.setHeading(0);
+					} else {
+						l.demoteHeading();
 					}
 				} else {
 					// MULTIPLE LINES
 					Line.iterateOverSelectedLines(editor, (l: Line) => {
-						l.setParentLine(editor);
-						if (l.heading && l.parent) {
-							const indentCompensation =
-								l.indent - l.parent.indent;
-							l.setHeading(
-								Math.max(
-									l.heading - 1,
-									l.parent.heading + indentCompensation
-								)
-							);
+						if (l.heading) {
+							l.demoteHeading();
 						}
 					});
 				}
@@ -109,24 +81,6 @@ export default class HeadingHandler extends Plugin {
 			},
 		});
 		this.addCommand({
-			id: "convert-indent-to-heading",
-			name: "Convert indentation to heading level",
-			editorCallback: (editor: Editor) => {
-				const l = Line.atCursor(editor);
-				l.convertIndentToHeading();
-				Line.applyUpdates(editor);
-			},
-		});
-		this.addCommand({
-			id: "set-heading-indent",
-			name: "Set heading level to indentation level",
-			editorCallback: (editor: Editor) => {
-				const l = Line.atCursor(editor);
-				l.setHeadingToIndent();
-				Line.applyUpdates(editor);
-			},
-		});
-		this.addCommand({
 			id: "remove-heading",
 			name: "Remove heading",
 			editorCallback: (editor: Editor) => {
@@ -140,11 +94,7 @@ export default class HeadingHandler extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
