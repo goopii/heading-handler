@@ -1,22 +1,8 @@
-import { App, Editor, EditorSelection, MarkdownView, Modal, Notice, Plugin } from "obsidian";
-import { HeadingHandlerSettings, DEFAULT_SETTINGS, HeadingHandlerSettingTab } from "@settings";
+import { Editor, Plugin } from "obsidian";
 import { Line } from "@Line";
 
 export default class HeadingHandler extends Plugin {
-	settings: HeadingHandlerSettings;
-
 	async onload() {
-		await this.loadSettings();
-		this.addCommand({
-			id: "debug-command",
-			name: "Command for testing purposes during development",
-			editorCallback: (editor: Editor) => {
-				console.log("---debug-command---");
-				Line.iterateOverSelectedLines(editor, (l: Line) => {
-					console.log(l);
-				});
-			},
-		});
 		this.addCommand({
 			id: "smart-promote-heading",
 			name: "Smart Promote Heading",
@@ -42,9 +28,7 @@ export default class HeadingHandler extends Plugin {
 				if (!editor.somethingSelected()) {
 					// SINGLE LINE
 					const l = Line.atCursor(editor);
-					console.log(l);
 					if (!l.heading) return;
-
 					if (l.heading - 1 < l.getMinimumHeading()) {
 						l.setHeading(0);
 					} else {
@@ -53,9 +37,8 @@ export default class HeadingHandler extends Plugin {
 				} else {
 					// MULTIPLE LINES
 					Line.iterateOverSelectedLines(editor, (l: Line) => {
-						if (l.heading) {
-							l.demoteHeading();
-						}
+						if (!l.heading) return;
+						l.demoteHeading();
 					});
 				}
 				Line.applyUpdates(editor);
@@ -92,12 +75,4 @@ export default class HeadingHandler extends Plugin {
 	}
 
 	onunload() {}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
 }

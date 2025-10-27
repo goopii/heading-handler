@@ -3,9 +3,9 @@
 	"name": "Heading Handler",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Adds smart context-aware commands for changing the heading.",
-	"author": "goopi",
+	"description": "Smart heading commands that respect document hierarchy and indentation.",
+	"author": "Malte Henriksson",
 	"authorUrl": "https://github.com/goopii",
-	"fundingUrl": "",
+	"fundingUrl": "https://ko-fi.com/goopii",
 	"isDesktopOnly": false
 }

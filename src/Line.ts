@@ -147,7 +147,6 @@ export class Line {
 				to: { ch: oldContentLength, line: l.row },
 			};
 			if (!editor.somethingSelected()) {
-				// Store the new cursor position
 				newCursorPosition = newContent.length;
 			}
 			updatedLines.push(change);
@@ -213,44 +212,10 @@ export class Line {
 	}
 
 	public getMinimumHeading(): number {
-		console.log(`this.indent: ${this.indent}`);
-		console.log(`parent.indent: ${this.parent.indent}`);
-
 		const absoluteMinimum = this.indent + 1;
 		const relativeMinimum = this.parent.stagedUpdate.heading + 1;
 		const minHeading = Math.max(absoluteMinimum, relativeMinimum);
-
-		console.log(`parent heading: ${this.parent.stagedUpdate.heading}`);
-		console.log(`absoluteMinimum: ${absoluteMinimum}, relativeMinimum: ${relativeMinimum}`);
-		console.log(`minHeading: ${minHeading}`);
-		console.log("++++++++++++++++++++++++++++++++++++++++");
 		return minHeading;
-	}
-
-	public clampHeadingToIndent(desiredHeading: number): void {
-		if (!this.parent) {
-			this.setHeading(desiredHeading);
-			return;
-		}
-		// if (desiredHeading === 0) {
-		// 	this.setHeading(0);
-		// 	return;
-		// }
-		const minHeading = this.getMinimumHeading();
-		this.setHeading(Math.max(desiredHeading, minHeading));
-
-		// if (desiredHeading < minHeading) {
-		// 	this.setHeading(0);
-		// } else {
-		// 	this.setHeading(desiredHeading);
-		// }
-
-		console.log(`h[${this.heading}] "${this.text}" `);
-		console.log(`h[${this.heading}]->h[${this.stagedUpdate.heading}]`);
-		console.log(`p["${this.parent.text}"] h[${this.parent.heading}]->h[${this.parent.stagedUpdate.heading}]`);
-		console.log(`minHeading: ${minHeading}`);
-		console.log(`desiredHeading: ${desiredHeading}`);
-		console.log("--------------------------------");
 	}
 
 	public promoteHeading(): void {
@@ -261,9 +226,6 @@ export class Line {
 	public demoteHeading(): void {
 		const minHeading = this.getMinimumHeading();
 		const desiredHeading = this.heading - 1;
-		console.log(`minHeading: ${minHeading}`);
-		console.log(`desiredHeading: ${desiredHeading}`);
-		console.log("--------------------------------");
 		if (desiredHeading < minHeading) {
 			if (this.heading === minHeading && this.heading < 6) {
 				this.setHeading(0);
