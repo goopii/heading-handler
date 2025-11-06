@@ -213,6 +213,9 @@ export class Line {
 
 	public getMinimumHeading(): number {
 		const absoluteMinimum = this.indent + 1;
+		if (this.indent === this.parent.stagedUpdate.indent) {
+			return Math.max(absoluteMinimum, this.parent.stagedUpdate.heading);
+		}
 		const relativeMinimum = this.parent.stagedUpdate.heading + 1;
 		const minHeading = Math.max(absoluteMinimum, relativeMinimum);
 		return minHeading;
@@ -226,12 +229,10 @@ export class Line {
 	public demoteHeading(): void {
 		const minHeading = this.getMinimumHeading();
 		const desiredHeading = this.heading - 1;
-		if (desiredHeading < minHeading) {
-			if (this.heading === minHeading && this.heading < 6) {
-				this.setHeading(0);
-			}
-		} else {
+		if (desiredHeading >= minHeading) {
 			this.setHeading(desiredHeading);
+		} else if (this.heading === minHeading && this.heading < 6) {
+			this.setHeading(0);
 		}
 	}
 }

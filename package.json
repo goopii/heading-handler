@@ -1,6 +1,6 @@
 {
 	"name": "heading-handler",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Smart heading commands that respect document hierarchy and indentation.",
 	"main": "main.js",
 	"scripts": {
@@ -12,8 +12,7 @@
 		"obsidian",
 		"plugin",
 		"heading",
-		"markdown",
-		"hierarchy"
+		"markdown"
 	],
 	"author": "Malte Henriksson",
 	"license": "MIT",

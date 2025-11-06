@@ -1,7 +1,7 @@
 {
 	"id": "heading-handler",
 	"name": "Heading Handler",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Smart heading commands that respect document hierarchy and indentation.",
 	"author": "Malte Henriksson",
